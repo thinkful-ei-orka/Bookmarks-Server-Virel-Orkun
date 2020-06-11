@@ -1,6 +1,6 @@
 const { v4: uuid } = require('uuid');
 const bookmarksRouter = require('express').Router();
-
+const BookmarksService = require('./bookmark-service')
 const bookmarks = [
     {
         id: "1",
@@ -13,8 +13,14 @@ const bookmarks = [
 
 bookmarksRouter
     .route('/bookmarks')
-    .get((req,res)=>{
-        res.json(bookmarks);
+    .get((req,res,next)=>{
+        
+        BookmarksService.getAllBookmarks(req.app.get('db'))
+            .then(bookmarks=>{
+                res.json(bookmarks);
+            })
+            .catch(next)
+        
     })
     .post((req,res)=>{
         const { title, url, desc, rating } = req.body;
