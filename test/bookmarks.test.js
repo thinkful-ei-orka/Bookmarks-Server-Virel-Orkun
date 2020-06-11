@@ -25,11 +25,11 @@ describe.only('bookmarks endpoints', ()=>{
         {id: 3, title:'Youtube',url:'https://www.youtube.com', description:'sharing video platfrom', rating:5 }
     ]
 
-    // beforeEach('insert bookmarks', () => {
-    //     return db
-    //       .into('bookmarks')
-    //       .insert(testBookmarks)
-    //   })
+    beforeEach('insert bookmarks', () => {
+        return db
+          .into('bookmarks')
+          .insert(testBookmarks)
+      })
 
       it('GET /bookmarks',()=>{
         return supertest(app)
