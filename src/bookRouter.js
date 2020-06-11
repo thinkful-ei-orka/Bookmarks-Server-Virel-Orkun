@@ -1,15 +1,8 @@
 const { v4: uuid } = require('uuid');
 const bookmarksRouter = require('express').Router();
 const BookmarksService = require('./bookmark-service')
-const bookmarks = [
-    {
-        id: "1",
-        title: "Yahoo",
-        url: "https://www.yahoo.com",
-        desc: "lorem ipsum",
-        rating: 5
-    }
-]
+const logger = require('./logger')
+
 
 bookmarksRouter
     .route('/bookmarks')
@@ -77,20 +70,23 @@ bookmarksRouter
 
 bookmarksRouter
     .route('/bookmarks/:id')
-    .get((req,res)=>{
-        // res.json(bookmarks);
+    .get((req, res, next) => {
         const { id } = req.params;
-        const bookmark = bookmarks.find(bookmark => bookmark.id === id);
-
-        if (!bookmark) {
-            logger.error(`Bookmark with id ${id} not found.`);
-            return res
-                .status(404)
-                .send('Bookmark not found');
-        }
-
-        res.json(bookmark);
+        BookmarksService.getById(req.app.get('db'), id)
+            .then(bookmark => {
+                if (!bookmark) {
+                    logger.error(`Bookmark with id ${id} not found.`);
+                    return res
+                        .status(404)
+                        .send('Bookmark not found');
+                }
+                res.json(bookmark);
+            })
+            .catch(next)
     })
+
+
+
     .delete((req, res) => {
         const { id } = req.params;
         const bookmarkIndex = bookmarks.findIndex(bookmark => bookmark.id === id);

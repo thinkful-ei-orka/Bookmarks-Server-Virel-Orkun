@@ -2,8 +2,11 @@ const { expect } = require('chai')
 const knex = require('knex')
 const app = require('../src/app')
 const supertest = require('supertest')
+const {makeBookmarksArray} = require('./bookmarks.fixtures')
 
-describe.only('bookmarks endpoints', ()=>{
+
+describe('bookmarks endpoints', () => {
+
     let db;
 
     before('make knex instance', () => {
@@ -18,14 +21,13 @@ describe.only('bookmarks endpoints', ()=>{
     after('disconnect from db', () => db.destroy())
   
     before('clean the table', () => db('bookmarks').truncate())
+    afterEach('cleanup', () => db('bookmarks').truncate())
+    
 
-    const testBookmarks = [
-        {id: 1, title:'Yahoo',url:'https://www.yahoo.com', description:'lorem ispum', rating:5 },
-        {id: 2, title:'Google',url:'https://www.google.com', description:'search engine', rating:5 },
-        {id: 3, title:'Youtube',url:'https://www.youtube.com', description:'sharing video platfrom', rating:5 }
-    ]
-
-    beforeEach('insert bookmarks', () => {
+  describe('GET /bookmarks', () => {
+    context('Given there are bookmarks in the database', () => {
+      const testBookmarks = makeBookmarksArray()
+      beforeEach('insert bookmarks', () => {
         return db
           .into('bookmarks')
           .insert(testBookmarks)
@@ -36,4 +38,49 @@ describe.only('bookmarks endpoints', ()=>{
             .get('/bookmarks')
             .expect(200, testBookmarks)
       })
+      })
+    })
+    
+  
+      describe('GET /bookmarks/:id', () => {
+        context('Given there are bookmarks in the database', () => {
+          const testBookmarks = makeBookmarksArray()
+      
+          beforeEach('insert bookmarks', () => {
+            return db 
+              .into('bookmarks')
+              .insert(testBookmarks)
+          })
+      
+          it('responds with 200 and the specified bookmark', () => {
+            const bookmarkId = 1
+            const expectedBookmark = testBookmarks[bookmarkId - 1]
+            return supertest(app)
+              .get(`/bookmarks/${bookmarkId}`)
+              .expect(200, expectedBookmark)
+          })
+        })
+      })
+  
+  describe('GET /bookmarks', () => {
+    context('Given no bookmarks', () => {
+      it('responds with 200 and an empty list', () => {
+        return supertest(app)
+          .get('/bookmarks')
+          .expect(200, [])
+          })
+        })
+  })
+  
+  describe(`GET /bookmarks/:id`, () => {
+    context('Given no bookmarks', () => {
+      it('responds with 404', () => {
+        const bookmarkId = 12345
+        return supertest(app)
+          .get(`/bookmarks/${bookmarkId}`)
+          .expect(404, 'Bookmark not found')
+      })
+    })
+  })
 })
+
